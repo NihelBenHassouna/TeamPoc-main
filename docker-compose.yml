@@ -1,0 +1,129 @@
+version: '3.4'
+
+networks:
+  api-network:
+    driver: bridge 
+
+
+services:
+
+ 
+    
+  client:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    build:
+      dockerfile: ./react_client/Dockerfile
+      context: .
+    ports:
+      - '3000:3000'
+    volumes:
+      - /app/node_modules
+      - ./:/app
+
+      
+  apione:
+    image: apione:latest
+    depends_on:
+      - "postgres_image"
+      - "ftp-server"
+    build:
+      context: .
+      dockerfile: ./ApiOne/Dockerfile
+    ports:
+      - "9001:9001"
+    environment:
+      DB_CONNECTION_STRING: "host=postgres_image;port=5432;database=postgres;username=postgres;password=postgres"
+    networks:
+      - api-network 
+      
+      
+  apitwo:
+    image: apitwo:latest
+    depends_on:
+      - "postgres_image"
+      - "ftp-server"
+    build:
+      context: .
+      dockerfile: ./ApiTwo/Dockerfile
+    ports:
+      - "9002:9002"
+    environment:
+      DB_CONNECTION_STRING: "host=postgres_image;port=5432;database=postgres;username=postgres;password=postgres"
+    networks:
+      - api-network  
+      
+      
+      
+  apithree:
+    image: apithree:latest
+    depends_on:
+      - "postgres_image"
+      - "ftp-server"
+    build:
+      context: .
+      dockerfile: ./ApiThree/Dockerfile
+    ports:
+      - "9003:9003"
+    environment:
+      DB_CONNECTION_STRING: "host=postgres_image;port=5432;database=postgres;username=postgres;password=postgres"
+    networks:
+      - api-network  
+      
+      
+      
+  apifour:
+    image: apifour:latest
+    depends_on:
+      - "postgres_image"
+      - "ftp-server"
+    build:
+      context: .
+      dockerfile: ./ApiFour/Dockerfile
+    ports:
+      - "9004:9004"
+    environment:
+      DB_CONNECTION_STRING: "host=postgres_image;port=5432;database=postgres;username=postgres;password=postgres"
+    networks:
+      - api-network  
+  
+  postgres_image:
+    image: postgres:latest
+    ports:
+      - "5432"
+    restart: always
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+      - ./dbscripts/sql.sql:/docker-entrypoint-initdb.d/sql.sql
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "postgres"
+    networks:
+      - api-network
+  ftp-server:
+    container_name: ftp-server
+    image: stilliard/pure-ftpd:hardened
+    ports:
+       - "21:21"
+       - "30000-30009:30000-30009"
+    environment:
+      PUBLICHOST: ${PUBLICHOST:-apifour}
+      PUBLICHOST: ${PUBLICHOST:-apithree}
+      PUBLICHOST: ${PUBLICHOST:-apitwo}
+      PUBLICHOST: ${PUBLICHOST:-apione}
+
+      FTP_USER_NAME: "localhost"
+      FTP_USER_PASS: "localhost"
+      FTP_USER_HOME: "/localhost/"
+    restart: on-failure
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+    networks:
+      - api-network
+volumes:
+  db_volume:
+
+
+     
