@@ -36,9 +36,10 @@ namespace ApiThree.Controllers
             return AggRepository.getAgg_Between_Date1_U_Date2(_context, dates.date1, dates. date2);
         }
 
+
     //    [HttpPut("/update/{{date}}")]
         [HttpPost("/update/")]
-        public void update() {
+        public Agg update() {
            
 
             return AggRepository.update(_context,_contextInput,_contextRadio);  // date
